@@ -19,6 +19,10 @@ type orderItem struct {
 	Quantity  int `json:"quantity"`
 }
 
+// NewOrder creates a new order with the given customer name and items.
+// It returns an error if the customer name is empty or if the items slice is empty.
+// It also returns an error if any of the items have invalid details.
+// Otherwise, it returns a new order with the given customer name and items.
 func NewOrder(customerName string, items []orderItem) (*order, error) {
 	if customerName == "" || len(items) == 0 {
 		return nil, errors.New("order is empty")
@@ -38,6 +42,9 @@ func NewOrder(customerName string, items []orderItem) (*order, error) {
 	}, nil
 }
 
+// NewOrderItem creates a new order item with the given order ID, product ID, and quantity.
+// It returns an error if any of the given parameters are empty (i.e. 0).
+// Otherwise, it returns a new order item with the given parameters.
 func NewOrderItem(orderId, productId, quantity int) (*orderItem, error) {
 	if orderId == 0 || productId == 0 || quantity == 0 {
 		return nil, errors.New("order item is empty")
@@ -49,6 +56,9 @@ func NewOrderItem(orderId, productId, quantity int) (*orderItem, error) {
 	}, nil
 }
 
+// getAllOrders retrieves a list of all orders from the database.
+// If there is an error retrieving the orders, it will return a nil slice and an error.
+// Otherwise, it will return a slice of all orders.
 func getAllOrders(db *sql.DB) ([]order, error) {
 	rows, err := db.Query("Select * from orders")
 	if err != nil {
@@ -70,6 +80,10 @@ func getAllOrders(db *sql.DB) ([]order, error) {
 	return orders, nil
 }
 
+// getOrder retrieves a single order from the database.
+// It expects the order ID as a parameter, and returns an error if the order is not found.
+// If there is an error retrieving the order, it will return a nil order and an error.
+// Otherwise, it will return the retrieved order with its items.
 func getOrder(db *sql.DB, orderID int) (order, error) {
 	var ord order
 	err := db.QueryRow("Select * from orders where id = ?", orderID).Scan(&ord.ID, &ord.CustomerName, &ord.Total, &ord.Status)
@@ -83,6 +97,11 @@ func getOrder(db *sql.DB, orderID int) (order, error) {
 	return ord, nil
 }
 
+// getOrderItems retrieves a list of all order items associated with the given order.
+// It expects a database connection and the order ID as parameters, and returns an error if the
+// order items cannot be retrieved.
+// If there is an error retrieving the order items, it will return a nil slice and an error.
+// Otherwise, it will return a slice of all order items associated with the given order.
 func (ord *order) getOrderItems(db *sql.DB) error {
 	rows, err := db.Query("Select * from order_items where order_id = ?", ord.ID)
 	if err != nil {
@@ -101,6 +120,10 @@ func (ord *order) getOrderItems(db *sql.DB) error {
 	return nil
 }
 
+// createOrder creates a new order in the database.
+// It expects a database connection and an order as parameters, and returns an error if the order cannot be created.
+// If there is an error creating the order, it will return a nil error.
+// Otherwise, it will return a nil error and set the order's ID to the last inserted ID.
 func (ord *order) createOrder(db *sql.DB) error {
 	res, err := db.Exec("INSERT into orders (customerName, totla, status) values (?, ?, ?) ", ord.CustomerName, ord.Total, ord.Status)
 	if err != nil {
@@ -115,6 +138,10 @@ func (ord *order) createOrder(db *sql.DB) error {
 	return nil
 }
 
+// createOrderItem creates a new order item in the database.
+// It expects a database connection and an order item as parameters, and returns an error if the order item cannot be created.
+// If there is an error creating the order item, it will return a nil error.
+// Otherwise, it will return a nil error and set the order item's ID to the last inserted ID.
 func (ordItem *orderItem) createOrderItem(db *sql.DB) error {
 	_, err := db.Exec("INSERT into order_items (order_id, product_id, quantity) values (?, ?, ?) ", ordItem.OrderID, ordItem.ProductID, ordItem.Quantity)
 	if err != nil {
