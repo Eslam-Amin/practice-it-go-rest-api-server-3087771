@@ -137,7 +137,7 @@ func (app *App) createOrder(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	var orderInput order
 	json.Unmarshal(body, &orderInput)
-	ord, err := NewOrder(orderInput.CustomerName, orderInput.Items)
+	ord, err := NewOrder(orderInput.CustomerName, orderInput.Total)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -148,15 +148,22 @@ func (app *App) createOrder(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
+	orderItems := []orderItem{}
 	for _, item := range orderInput.Items {
-		err = item.createOrderItem(app.DB)
+		ordItem, err := NewOrderItem(ord.ID, item.ProductID, item.Quantity)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		err = ordItem.createOrderItem(app.DB)
 		if err != nil {
 			fmt.Printf("CreateOrderItem Error: %v", err.Error())
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		orderItems = append(orderItems, *ordItem)
 	}
+	ord.Items = orderItems
 	respondWithJSON(w, http.StatusCreated, ord)
 }
 
