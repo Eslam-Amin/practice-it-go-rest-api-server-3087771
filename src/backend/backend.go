@@ -56,6 +56,8 @@ func (app *App) initializeRoutes() {
 	app.Router.HandleFunc("/products", app.getProducts).Methods("GET")
 	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
 	app.Router.HandleFunc("/products/{id}", app.getProduct).Methods("GET")
+	app.Router.HandleFunc("/orders/", app.getAllOrders).Methods("GET")
+	app.Router.HandleFunc("/orders/{id}", app.getOrder).Methods("GET")
 }
 
 // CreateProduct creates a new product in the database.
