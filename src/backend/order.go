@@ -23,22 +23,15 @@ type orderItem struct {
 // It returns an error if the customer name is empty or if the items slice is empty.
 // It also returns an error if any of the items have invalid details.
 // Otherwise, it returns a new order with the given customer name and items.
-func NewOrder(customerName string, items []orderItem) (*order, error) {
-	if customerName == "" || len(items) == 0 {
+func NewOrder(customerName string, total int) (*order, error) {
+	if customerName == "" || total == 0 {
 		return nil, errors.New("order is empty")
-	}
-	orderItems := []orderItem{}
-	for _, item := range items {
-		ordItem, err := NewOrderItem(item.OrderID, item.ProductID, item.Quantity)
-		if err != nil {
-			return nil, err
-		}
-		orderItems = append(items, *ordItem)
 	}
 
 	return &order{
 		CustomerName: customerName,
-		Items:        orderItems,
+		Status:       "Pending",
+		Total:        total,
 	}, nil
 }
 
@@ -46,8 +39,8 @@ func NewOrder(customerName string, items []orderItem) (*order, error) {
 // It returns an error if any of the given parameters are empty (i.e. 0).
 // Otherwise, it returns a new order item with the given parameters.
 func NewOrderItem(orderId, productId, quantity int) (*orderItem, error) {
-	if orderId == 0 || productId == 0 || quantity == 0 {
-		return nil, errors.New("order item is empty")
+	if quantity == 0 {
+		return nil, errors.New("order item quantity is empty")
 	}
 	return &orderItem{
 		OrderID:   orderId,
@@ -125,7 +118,7 @@ func (ord *order) getOrderItems(db *sql.DB) error {
 // If there is an error creating the order, it will return a nil error.
 // Otherwise, it will return a nil error and set the order's ID to the last inserted ID.
 func (ord *order) createOrder(db *sql.DB) error {
-	res, err := db.Exec("INSERT into orders (customerName, totla, status) values (?, ?, ?) ", ord.CustomerName, ord.Total, ord.Status)
+	res, err := db.Exec("INSERT into orders (customerName, total, status) values (?, ?, ?) ", ord.CustomerName, ord.Total, ord.Status)
 	if err != nil {
 		return nil
 	}
