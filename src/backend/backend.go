@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -42,7 +43,21 @@ func (app *App) Initialize() {
 
 func (app *App) initializeRoutes() {
 	app.Router.HandleFunc("/products", app.getProducts).Methods("GET")
+	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
 	app.Router.HandleFunc("/products/{id}", app.getProduct).Methods("GET")
+}
+
+func (app *App) createProduct(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	var prod product
+	json.Unmarshal(body, &prod)
+	err := prod.createProduct(app.DB)
+	if err != nil {
+		fmt.Printf("CreateProduct Error: %v", err.Error())
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJSON(w, http.StatusCreated, prod)
 }
 
 func (app *App) getProducts(w http.ResponseWriter, r *http.Request) {
