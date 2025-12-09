@@ -1,6 +1,9 @@
 package backend
 
-import "database/sql"
+import (
+	"database/sql"
+	"errors"
+)
 
 type order struct {
 	ID           int         `json:"id"`
