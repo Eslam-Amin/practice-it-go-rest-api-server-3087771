@@ -121,6 +121,33 @@ func (app *App) getProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, product)
 }
 
+func (app *App) getAllOrders(w http.ResponseWriter, r *http.Request) {
+	orders, err := getAllOrders(app.DB)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+	respondWithJSON(w, http.StatusOK, orders)
+}
+
+func (app *App) getOrder(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Order ID")
+		return
+	}
+	order, err := getOrder(app.DB, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			respondWithError(w, http.StatusNotFound, "Order Not Found")
+		} else {
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	respondWithJSON(w, http.StatusOK, order)
+}
+
 // Run starts the HTTP server and begins listening for incoming requests.
 // It prints a message to the console indicating that the server has started
 // and is listening on the specified port. It then calls http.ListenAndServe to
