@@ -84,9 +84,14 @@ func (app *App) getProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	product, err := getProduct(app.DB, id)
 	if err != nil {
-		fmt.Printf("GetProduct Error: %v", err.Error())
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
+		if err == sql.ErrNoRows {
+			respondWithError(w, http.StatusNotFound, "Product Not Found")
+			return
+		} else {
+			fmt.Printf("GetProduct Error: %v", err.Error())
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 	respondWithJSON(w, http.StatusOK, product)
 }
