@@ -2,6 +2,7 @@ package backend
 
 import (
 	"database/sql"
+	"errors"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -13,6 +14,13 @@ type product struct {
 	Inventory   int     `json:"inventory"`
 	Price       float64 `json:"price"`
 	Status      string  `json:"status"`
+}
+
+func NewProduct(productCode, name string, inventory int, price float64, status string) (*product, error) {
+	if productCode == "" || name == "" || inventory == 0 || price == 0 || status == "" {
+		return nil, errors.New("some fields are empty")
+	}
+	return &product{ProductCode: productCode, Name: name, Inventory: inventory, Price: price, Status: status}, nil
 }
 
 func getProducts(db *sql.DB) ([]product, error) {

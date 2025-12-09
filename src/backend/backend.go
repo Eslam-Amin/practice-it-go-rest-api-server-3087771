@@ -49,9 +49,14 @@ func (app *App) initializeRoutes() {
 
 func (app *App) createProduct(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
-	var prod product
-	json.Unmarshal(body, &prod)
-	err := prod.createProduct(app.DB)
+	var productInput product
+	json.Unmarshal(body, &productInput)
+	prod, err := NewProduct(productInput.ProductCode, productInput.Name, productInput.Inventory, productInput.Price, productInput.Status)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	err = prod.createProduct(app.DB)
 	if err != nil {
 		fmt.Printf("CreateProduct Error: %v", err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
