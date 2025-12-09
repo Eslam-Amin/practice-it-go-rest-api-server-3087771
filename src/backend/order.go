@@ -19,8 +19,12 @@ type orderItem struct {
 	Quantity  int `json:"quantity"`
 }
 
-func NewOrder() *order {
-	return &order{}
+func NewOrder(customerName string, items []orderItem) (*order, error) {
+	if customerName == "" || len(items) == 0 {
+		return nil, errors.New("customer name is empty")
+	}
+
+	return &order{}, nil
 }
 
 func getAllOrders(db *sql.DB) ([]order, error) {
