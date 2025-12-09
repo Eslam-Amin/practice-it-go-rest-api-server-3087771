@@ -56,7 +56,9 @@ func (app *App) initializeRoutes() {
 	app.Router.HandleFunc("/products", app.getProducts).Methods("GET")
 	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
 	app.Router.HandleFunc("/products/{id}", app.getProduct).Methods("GET")
-	app.Router.HandleFunc("/orders/", app.getAllOrders).Methods("GET")
+
+	app.Router.HandleFunc("/orders", app.getAllOrders).Methods("GET")
+	app.Router.HandleFunc("/orders", app.createOrder).Methods("POST")
 	app.Router.HandleFunc("/orders/{id}", app.getOrder).Methods("GET")
 }
 
@@ -119,6 +121,33 @@ func (app *App) getProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJSON(w, http.StatusOK, product)
+}
+
+func (app *App) createOrder(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	var orderInput order
+	json.Unmarshal(body, &orderInput)
+	ord, err := NewOrder(orderInput.CustomerName, orderInput.Items)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	err = ord.createOrder(app.DB)
+	if err != nil {
+		fmt.Printf("CreateOrder Error: %v", err.Error())
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, item := range orderInput.Items {
+		err = item.createOrderItem(app.DB)
+		if err != nil {
+			fmt.Printf("CreateOrderItem Error: %v", err.Error())
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+	respondWithJSON(w, http.StatusCreated, ord)
 }
 
 func (app *App) getAllOrders(w http.ResponseWriter, r *http.Request) {
