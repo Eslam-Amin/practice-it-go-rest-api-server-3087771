@@ -21,10 +21,32 @@ type orderItem struct {
 
 func NewOrder(customerName string, items []orderItem) (*order, error) {
 	if customerName == "" || len(items) == 0 {
-		return nil, errors.New("customer name is empty")
+		return nil, errors.New("order is empty")
+	}
+	orderItems := []orderItem{}
+	for _, item := range items {
+		ordItem, err := NewOrderItem(item.OrderID, item.ProductID, item.Quantity)
+		if err != nil {
+			return nil, err
+		}
+		orderItems = append(items, *ordItem)
 	}
 
-	return &order{}, nil
+	return &order{
+		CustomerName: customerName,
+		Items:        orderItems,
+	}, nil
+}
+
+func NewOrderItem(orderId, productId, quantity int) (*orderItem, error) {
+	if orderId == 0 || productId == 0 || quantity == 0 {
+		return nil, errors.New("order item is empty")
+	}
+	return &orderItem{
+		OrderID:   orderId,
+		ProductID: productId,
+		Quantity:  quantity,
+	}, nil
 }
 
 func getAllOrders(db *sql.DB) ([]order, error) {
