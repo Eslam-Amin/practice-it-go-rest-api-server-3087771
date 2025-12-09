@@ -16,6 +16,10 @@ type orderItem struct {
 	Quantity  int `json:"quantity"`
 }
 
+func NewOrder() *order {
+	return &order{}
+}
+
 func getAllOrders(db *sql.DB) ([]order, error) {
 	rows, err := db.Query("Select * from orders")
 	if err != nil {
@@ -28,7 +32,42 @@ func getAllOrders(db *sql.DB) ([]order, error) {
 		if err := rows.Scan(&ord.ID, &ord.CustomerName, &ord.Total, &ord.Status); err != nil {
 			return nil, err
 		}
+		err = ord.getOrderItems(db)
+		if err != nil {
+			return nil, err
+		}
 		orders = append(orders, ord)
 	}
 	return orders, nil
+}
+
+func getOrder(db *sql.DB, orderID int) (order, error) {
+	var ord order
+	err := db.QueryRow("Select * from orders where id = ?", orderID).Scan(&ord.ID, &ord.CustomerName, &ord.Total, &ord.Status)
+	if err != nil {
+		return ord, err
+	}
+	err = ord.getOrderItems(db)
+	if err != nil {
+		return ord, err
+	}
+	return ord, nil
+}
+
+func (ord *order) getOrderItems(db *sql.DB) error {
+	rows, err := db.Query("Select * from order_items where order_id = ?", ord.ID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	orderItems := []orderItem{}
+	for rows.Next() {
+		var ordItem orderItem
+		if err := rows.Scan(&ordItem.OrderID, &ordItem.ProductID, &ordItem.Quantity); err != nil {
+			return err
+		}
+		orderItems = append(orderItems, ordItem)
+	}
+	ord.Items = orderItems
+	return nil
 }
