@@ -52,6 +52,8 @@ func (app *App) Initialize() {
 // initializeRoutes sets up the routes for the application.
 // It maps the /products endpoint to the getProducts and createProduct handlers,
 // and the /products/{id} endpoint to the getProduct handler.
+// It maps the /orders endpoint to the getAllOrders and createOrder handlers,
+// and the /orders/{id} endpoint to the getOrder handler.
 func (app *App) initializeRoutes() {
 	app.Router.HandleFunc("/products", app.getProducts).Methods("GET")
 	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
@@ -123,6 +125,14 @@ func (app *App) getProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, product)
 }
 
+// createOrder creates a new order in the database.
+// It expects a request body as JSON, and attempts to create a new order
+// with the given details. If the request body is invalid JSON, or if the
+// order details are invalid, it will return a 400 error response. If the
+// order creation fails for some reason, it will return a 500 error response.
+// Otherwise, it will return a 201 response with the newly created order.
+// It also creates a new order item for each item in the order, and returns a 500
+// error response if any of the order items cannot be created.
 func (app *App) createOrder(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	var orderInput order
@@ -150,6 +160,9 @@ func (app *App) createOrder(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, ord)
 }
 
+// getAllOrders retrieves a list of all orders from the database.
+// If there is an error retrieving the orders, it will return a 500 error response.
+// Otherwise, it will return a 200 response with the list of orders.
 func (app *App) getAllOrders(w http.ResponseWriter, r *http.Request) {
 	orders, err := getAllOrders(app.DB)
 	if err != nil {
@@ -158,6 +171,10 @@ func (app *App) getAllOrders(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, orders)
 }
 
+// getOrder retrieves a single order from the database.
+// It expects the order ID as a URL parameter, and returns a 404 error response if the order is not found.
+// If there is an error retrieving the order, it will return a 500 error response.
+// Otherwise, it will return a 200 response with the order.
 func (app *App) getOrder(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
