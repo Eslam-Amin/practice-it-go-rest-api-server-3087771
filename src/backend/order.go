@@ -71,3 +71,25 @@ func (ord *order) getOrderItems(db *sql.DB) error {
 	ord.Items = orderItems
 	return nil
 }
+
+func (ord *order) createOrder(db *sql.DB) error {
+	res, err := db.Exec("INSERT into orders (customerName, totla, status) values (?, ?, ?) ", ord.CustomerName, ord.Total, ord.Status)
+	if err != nil {
+		return nil
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil
+	}
+	ord.ID = int(id)
+	return nil
+}
+
+func (ordItem *orderItem) createOrderItem(db *sql.DB) error {
+	_, err := db.Exec("INSERT into order_items (order_id, product_id, quantity) values (?, ?, ?) ", ordItem.OrderID, ordItem.ProductID, ordItem.Quantity)
+	if err != nil {
+		return nil
+	}
+	return nil
+}
